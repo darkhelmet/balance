@@ -5,27 +5,33 @@ import (
     "io"
     "log"
     "net"
-    "strings"
+    "net/http"
+    "net/http/httputil"
+    "sync"
 )
 
 type Backends struct {
-    servers []string
-    n       int
+    backends []string
+    n        int
+    l        sync.Mutex
 }
 
 func (b *Backends) Choose() string {
-    idx := b.n % len(b.servers)
+    b.l.Lock()
+    defer b.l.Unlock()
+    idx := b.n % len(b.backends)
     b.n++
-    return b.servers[idx]
+    return b.backends[idx]
 }
 
-func (b *Backends) String() string {
-    return strings.Join(b.servers, ", ")
+func (b *Backends) Len() int {
+    return len(b.backends)
 }
 
 var (
+    mode     = flag.String("mode", "tcp", "The mode to balance on: tcp|http")
     bind     = flag.String("bind", "", "The address to bind on")
-    balance  = flag.String("balance", "", "The backend servers to balance connections across, separated by commas")
+    balance  []string
     backends *Backends
 )
 
@@ -36,12 +42,11 @@ func init() {
         log.Fatalln("specify the address to listen on with -bind")
     }
 
-    servers := strings.Split(*balance, ",")
-    if len(servers) == 1 && servers[0] == "" {
-        log.Fatalln("please specify backend servers with -backends")
+    servers := flag.Args()
+    if len(servers) == 0 {
+        log.Fatalln("please specify backend servers")
     }
-
-    backends = &Backends{servers: servers}
+    backends = &Backends{backends: servers}
 }
 
 func copy(wc io.WriteCloser, r io.Reader) {
@@ -49,11 +54,11 @@ func copy(wc io.WriteCloser, r io.Reader) {
     io.Copy(wc, r)
 }
 
-func handleConnection(us net.Conn, server string) {
-    ds, err := net.Dial("tcp", server)
+func handleConnection(us net.Conn, backend string) {
+    ds, err := net.Dial("tcp", backend)
     if err != nil {
         us.Close()
-        log.Printf("failed to dial %s: %s", server, err)
+        log.Printf("failed to dial %s: %s", backend, err)
         return
     }
 
@@ -61,13 +66,14 @@ func handleConnection(us net.Conn, server string) {
     go copy(us, ds)
 }
 
-func main() {
+func tcpBalance() {
+    log.Println("using tcp balancing")
     ln, err := net.Listen("tcp", *bind)
     if err != nil {
         log.Fatalf("failed to bind: %s", err)
     }
 
-    log.Printf("listening on %s, balancing %s", *bind, backends)
+    log.Printf("listening on %s, balancing %d backends", *bind, backends.Len())
 
     for {
         conn, err := ln.Accept()
@@ -76,5 +82,29 @@ func main() {
             continue
         }
         go handleConnection(conn, backends.Choose())
+    }
+}
+
+func httpBalance() {
+    log.Println("using http balancing")
+    proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
+        req.URL.Scheme = "http"
+        req.URL.Host = backends.Choose()
+    }}
+    log.Printf("listening on %s, balancing %d backends", *bind, backends.Len())
+    err := http.ListenAndServe(*bind, proxy)
+    if err != nil {
+        log.Fatalf("failed to bind: %s", err)
+    }
+}
+
+func main() {
+    switch *mode {
+    case "tcp":
+        tcpBalance()
+    case "http":
+        httpBalance()
+    default:
+        log.Printf("invalid balance mode %s", *mode)
     }
 }
