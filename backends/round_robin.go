@@ -4,17 +4,21 @@ import (
     "sync"
 )
 
-type simpleBackends struct {
+type roundRobin struct {
     backends []string
     n        int
     l        sync.Mutex
 }
 
-func NewSimpleBackends(ba []string) Backends {
-    return &simpleBackends{backends: ba}
+func NewRoundRobin(specs []string) Backends {
+    return &roundRobin{backends: specs}
 }
 
-func (b *simpleBackends) Choose() string {
+func init() {
+    factories["round-robin"] = NewRoundRobin
+}
+
+func (b *roundRobin) Choose() string {
     b.l.Lock()
     defer b.l.Unlock()
     idx := b.n % len(b.backends)
@@ -22,6 +26,6 @@ func (b *simpleBackends) Choose() string {
     return b.backends[idx]
 }
 
-func (b *simpleBackends) Len() int {
+func (b *roundRobin) Len() int {
     return len(b.backends)
 }
