@@ -2,37 +2,20 @@ package main
 
 import (
     "flag"
+    BA "github.com/darkhelmet/balance/backends"
+    // "github.com/hawx/hadfield"
     "io"
     "log"
     "net"
     "net/http"
     "net/http/httputil"
-    "sync"
 )
-
-type Backends struct {
-    backends []string
-    n        int
-    l        sync.Mutex
-}
-
-func (b *Backends) Choose() string {
-    b.l.Lock()
-    defer b.l.Unlock()
-    idx := b.n % len(b.backends)
-    b.n++
-    return b.backends[idx]
-}
-
-func (b *Backends) Len() int {
-    return len(b.backends)
-}
 
 var (
     mode     = flag.String("mode", "tcp", "The mode to balance on: tcp|http")
     bind     = flag.String("bind", "", "The address to bind on")
     balance  []string
-    backends *Backends
+    backends BA.Backends
 )
 
 func init() {
@@ -46,7 +29,7 @@ func init() {
     if len(servers) == 0 {
         log.Fatalln("please specify backend servers")
     }
-    backends = &Backends{backends: servers}
+    backends = BA.NewSimpleBackends(servers)
 }
 
 func copy(wc io.WriteCloser, r io.Reader) {
