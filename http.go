@@ -11,7 +11,6 @@ import (
 func httpBalance(bind string, backends BA.Backends) {
     log.Println("using http balancing")
     proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
-        req.URL.Scheme = "http"
         req.URL.Host = backends.Choose()
     }}
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
