@@ -48,7 +48,7 @@ func init() {
     fs := newFlagSet("tcp")
 
     cmd.Commands = append(cmd.Commands, &commander.Command{
-        UsageLine: "tcp [options]",
+        UsageLine: "tcp [options] <backend> [<more backends>]",
         Short:     "performs tcp based load balancing",
         Flag:      *fs,
         Run:       balancer(tcpBalance),

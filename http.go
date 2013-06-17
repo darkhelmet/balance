@@ -24,7 +24,7 @@ func init() {
     fs := newFlagSet("http")
 
     cmd.Commands = append(cmd.Commands, &commander.Command{
-        UsageLine: "http [options]",
+        UsageLine: "http [options] <backend> [<more backends>]",
         Short:     "performs http based load balancing",
         Flag:      *fs,
         Run:       balancer(httpBalance),

@@ -1,14 +1,18 @@
 # balance
 
-Simple TCP/HTTP load balancer in Go
+Simple TCP/HTTP/HTTPS load balancer in Go
+
+## Install
+
+    go get github.com/darkhelmet/balance
 
 ## Usage
 
     # Simple tcp mode
-    balance -bind :4000 localhost:4001 localhost:4002
+    balance tcp -bind :4000 localhost:4001 localhost:4002
 
     # HTTP mode
-    balance -bind :4000 -mode http localhost:4001 localhost:4002    
+    balance http -bind :4000 localhost:4001 localhost:4002    
 
 ## License
 

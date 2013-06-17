@@ -51,7 +51,7 @@ func buildBackends(balanceFlag *flag.Flag, backends []string) BA.Backends {
 func newFlagSet(name string) *flag.FlagSet {
     fs := flag.NewFlagSet(name, flag.ExitOnError)
     fs.String("bind", "", "the address to listen on")
-    fs.String("balance", "", "the balancing algorithm to use")
+    fs.String("balance", "round-robin", "the balancing algorithm to use")
     return fs
 }
 

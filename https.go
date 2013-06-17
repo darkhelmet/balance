@@ -38,7 +38,7 @@ func init() {
     fs.StringVar(&httpsOptions.keyFile, "key", "", "the SSL key file to use")
 
     cmd.Commands = append(cmd.Commands, &commander.Command{
-        UsageLine: "https [options]",
+        UsageLine: "https [options] <backend> [<more backends>]",
         Short:     "performs https based load balancing",
         Flag:      *fs,
         Run:       balancer(httpsBalance),
