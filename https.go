@@ -24,6 +24,7 @@ func httpsBalance(bind string, backends BA.Backends) {
         req.URL.Scheme = "http"
         req.Header.Add("X-Forwarded-Proto", "https")
         req.URL.Host = backends.Choose()
+        req.Header.Add(XRealIP, RealIP(req))
     }}
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
     err := http.ListenAndServeTLS(bind, httpsOptions.certFile, httpsOptions.keyFile, proxy)

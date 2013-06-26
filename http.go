@@ -13,6 +13,7 @@ func httpBalance(bind string, backends BA.Backends) {
     proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
         req.URL.Scheme = "http"
         req.URL.Host = backends.Choose()
+        req.Header.Add(XRealIP, RealIP(req))
     }}
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
     err := http.ListenAndServe(bind, proxy)
