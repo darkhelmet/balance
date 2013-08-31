@@ -8,7 +8,10 @@ import (
     "os"
 )
 
-var cmd = &commander.Commander{Name: "balance"}
+var cmd = &commander.Commander{
+    Name:  "balance",
+    Short: "load balance tcp, http, and https connections to multiple backends",
+}
 
 func ensureBind(bindFlag *flag.Flag) string {
     if bindFlag == nil {
