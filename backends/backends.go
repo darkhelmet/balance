@@ -4,9 +4,23 @@ import (
     "log"
 )
 
+type backend struct {
+    hostname string
+}
+
+func (b *backend) String() string {
+    return b.hostname
+}
+
+type Backend interface {
+    String() string
+}
+
 type Backends interface {
-    Choose() string
+    Choose() Backend
     Len() int
+    Add(string)
+    Remove(string)
 }
 
 type Factory func([]string) Backends

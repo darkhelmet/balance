@@ -13,8 +13,14 @@ func copy(wc io.WriteCloser, r io.Reader) {
     io.Copy(wc, r)
 }
 
-func handleConnection(us net.Conn, backend string) {
-    ds, err := net.Dial("tcp", backend)
+func handleConnection(us net.Conn, backend BA.Backend) {
+    if backend == nil {
+        log.Printf("no backend available for connection from %s", us.RemoteAddr())
+        us.Close()
+        return
+    }
+
+    ds, err := net.Dial("tcp", backend.String())
     if err != nil {
         us.Close()
         log.Printf("failed to dial %s: %s", backend, err)

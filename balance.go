@@ -44,10 +44,6 @@ func buildBackends(balanceFlag *flag.Flag, backends []string) BA.Backends {
         log.Fatalln("specify the balancing algorithm with -balance")
     }
 
-    if len(backends) == 0 {
-        log.Fatalln("please specify backends to balance across")
-    }
-
     return BA.Build(balance, backends)
 }
 

@@ -21,9 +21,14 @@ func httpsBalance(bind string, backends BA.Backends) {
 
     log.Println("using https balancing")
     proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
+        backend := backends.Choose()
+        if backend == nil {
+            // FIXME: This is kind of gross
+            panic("no backend available")
+        }
         req.URL.Scheme = "http"
         req.Header.Add("X-Forwarded-Proto", "https")
-        req.URL.Host = backends.Choose()
+        req.URL.Host = backend.String()
         req.Header.Add(XRealIP, RealIP(req))
     }}
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())

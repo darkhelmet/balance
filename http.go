@@ -11,8 +11,13 @@ import (
 func httpBalance(bind string, backends BA.Backends) {
     log.Println("using http balancing")
     proxy := &httputil.ReverseProxy{Director: func(req *http.Request) {
+        backend := backends.Choose()
+        if backend == nil {
+            // FIXME: This is kind of gross
+            panic("no backend available")
+        }
         req.URL.Scheme = "http"
-        req.URL.Host = backends.Choose()
+        req.URL.Host = backend.String()
         req.Header.Add(XRealIP, RealIP(req))
     }}
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
@@ -26,7 +31,7 @@ func init() {
     fs := newFlagSet("http")
 
     cmd.Commands = append(cmd.Commands, &commander.Command{
-        UsageLine: "http [options] <backend> [<more backends>]",
+        UsageLine: "http [options] [<backends>]",
         Short:     "performs http based load balancing",
         Flag:      *fs,
         Run:       balancer(httpBalance),
