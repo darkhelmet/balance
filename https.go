@@ -1,11 +1,13 @@
 package main
 
 import (
-    BA "github.com/darkhelmet/balance/backends"
-    "github.com/gonuts/commander"
+    "fmt"
     "log"
     "net/http"
     "net/http/httputil"
+
+    BA "github.com/darkhelmet/balance/backends"
+    "github.com/gonuts/commander"
 )
 
 var (
@@ -14,7 +16,7 @@ var (
     }{}
 )
 
-func httpsBalance(bind string, backends BA.Backends) {
+func httpsBalance(bind string, backends BA.Backends) error {
     if httpsOptions.certFile == "" || httpsOptions.keyFile == "" {
         log.Fatalln("specify both -cert and -key")
     }
@@ -37,8 +39,9 @@ func httpsBalance(bind string, backends BA.Backends) {
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
     err := http.ListenAndServeTLS(bind, httpsOptions.certFile, httpsOptions.keyFile, proxy)
     if err != nil {
-        log.Fatalf("failed to bind: %s", err)
+        return fmt.Errorf("failed to bind: %s", err)
     }
+    return nil
 }
 
 func init() {
@@ -46,7 +49,7 @@ func init() {
     fs.StringVar(&httpsOptions.certFile, "cert", "", "the SSL certificate file to use")
     fs.StringVar(&httpsOptions.keyFile, "key", "", "the SSL key file to use")
 
-    cmd.Commands = append(cmd.Commands, &commander.Command{
+    cmd.Subcommands = append(cmd.Subcommands, &commander.Command{
         UsageLine: "https [options] <backend> [<more backends>]",
         Short:     "performs https based load balancing",
         Flag:      *fs,

@@ -1,11 +1,13 @@
 package main
 
 import (
-    BA "github.com/darkhelmet/balance/backends"
-    "github.com/gonuts/commander"
+    "fmt"
     "io"
     "log"
     "net"
+
+    BA "github.com/darkhelmet/balance/backends"
+    "github.com/gonuts/commander"
 )
 
 func copy(wc io.WriteCloser, r io.Reader) {
@@ -13,29 +15,30 @@ func copy(wc io.WriteCloser, r io.Reader) {
     io.Copy(wc, r)
 }
 
-func handleConnection(us net.Conn, backend BA.Backend) {
+func handleConnection(us net.Conn, backend BA.Backend) error {
     if backend == nil {
         log.Printf("no backend available for connection from %s", us.RemoteAddr())
-        us.Close()
-        return
+        return us.Close()
     }
 
     ds, err := net.Dial("tcp", backend.String())
     if err != nil {
         us.Close()
-        log.Printf("failed to dial %s: %s", backend, err)
-        return
+        return fmt.Errorf("failed to dial %s: %s", backend, err)
     }
 
+    // FIXME: fetch errors from copies ?
     go copy(ds, us)
     go copy(us, ds)
+
+    return nil
 }
 
-func tcpBalance(bind string, backends BA.Backends) {
+func tcpBalance(bind string, backends BA.Backends) error {
     log.Println("using tcp balancing")
     ln, err := net.Listen("tcp", bind)
     if err != nil {
-        log.Fatalf("failed to bind: %s", err)
+        return fmt.Errorf("failed to bind: %s", err)
     }
 
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
@@ -48,12 +51,14 @@ func tcpBalance(bind string, backends BA.Backends) {
         }
         go handleConnection(conn, backends.Choose())
     }
+
+    return err
 }
 
 func init() {
     fs := newFlagSet("tcp")
 
-    cmd.Commands = append(cmd.Commands, &commander.Command{
+    cmd.Subcommands = append(cmd.Subcommands, &commander.Command{
         UsageLine: "tcp [options] <backend> [<more backends>]",
         Short:     "performs tcp based load balancing",
         Flag:      *fs,

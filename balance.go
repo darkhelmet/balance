@@ -1,15 +1,15 @@
 package main
 
 import (
+    "log"
+    "os"
+
     BA "github.com/darkhelmet/balance/backends"
     "github.com/gonuts/commander"
     "github.com/gonuts/flag"
-    "log"
-    "os"
 )
 
-var cmd = &commander.Commander{
-    Name:  "balance",
+var cmd = &commander.Command{
     Short: "load balance tcp, http, and https connections to multiple backends",
 }
 
@@ -54,14 +54,17 @@ func newFlagSet(name string) *flag.FlagSet {
     return fs
 }
 
-func balancer(f func(string, BA.Backends)) func(*commander.Command, []string) {
-    return func(cmd *commander.Command, args []string) {
+func balancer(f func(string, BA.Backends) error) func(*commander.Command, []string) error {
+    return func(cmd *commander.Command, args []string) error {
         bind := ensureBind(cmd.Flag.Lookup("bind"))
         backends := buildBackends(cmd.Flag.Lookup("balance"), args)
-        f(bind, backends)
+        return f(bind, backends)
     }
 }
 
 func main() {
-    cmd.Run(os.Args[1:])
+    err := cmd.Dispatch(os.Args[1:])
+    if err != nil {
+        log.Fatalf("%v\n", err)
+    }
 }
