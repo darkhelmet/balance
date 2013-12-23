@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "log"
     "net/http"
     "net/http/httputil"
@@ -37,11 +36,7 @@ func httpsBalance(bind string, backends BA.Backends) error {
         }},
     }
     log.Printf("listening on %s, balancing %d backends", bind, backends.Len())
-    err := http.ListenAndServeTLS(bind, httpsOptions.certFile, httpsOptions.keyFile, proxy)
-    if err != nil {
-        return fmt.Errorf("failed to bind: %s", err)
-    }
-    return nil
+    return http.ListenAndServeTLS(bind, httpsOptions.certFile, httpsOptions.keyFile, proxy)
 }
 
 func init() {
