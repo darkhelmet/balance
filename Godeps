@@ -1,0 +1,14 @@
+{
+	"ImportPath": "github.com/darkhelmet/balance",
+	"GoVersion": "go1.2",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gonuts/commander",
+			"Rev": "6f9453dc9492c0be4a631daebfa5e9e8243a52c6"
+		},
+		{
+			"ImportPath": "github.com/gonuts/flag",
+			"Rev": "741a6cbd37a30dedc93f817e7de6aaf0ca38a493"
+		}
+	]
+}
